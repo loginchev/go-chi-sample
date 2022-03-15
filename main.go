@@ -2,17 +2,30 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
+
+	"github.com/joho/godotenv"
 )
+
+func init() {
+	// loads values from .env into the system
+	if err := godotenv.Load(); err != nil {
+		log.Print("No .env file found")
+	}
+}
 
 func main() {
 
-	server := &http.Server{Addr: "0.0.0.0:3333", Handler: service()}
+	host, _ := os.LookupEnv("HOST")
+	port, _ := os.LookupEnv("PORT")
+	fmt.Printf("%v:%v", host, port)
+	server := &http.Server{Addr: fmt.Sprintf("%v:%v", host, port), Handler: service()}
 
 	// Server run context
 	serverCtx, serverStopCtx := context.WithCancel(context.Background())
