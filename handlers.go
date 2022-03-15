@@ -26,8 +26,6 @@ func service() http.Handler {
 		if err != nil {
 			log.Fatalf("Error happened in JSON marshal. Err: %s", err)
 		}
-		//w.Write([]byte("welcome"))
-		//ещё один коммент
 		w.Write(jsonResp)
 	})
 
