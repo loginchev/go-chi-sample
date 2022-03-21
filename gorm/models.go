@@ -1,6 +1,12 @@
-package crud
+package main
 
-type task struct {
-	ID   uint
-	Name string
+type Task struct {
+	Idtasks     uint
+	Description string
+}
+
+type Comment struct {
+	Idcomments uint
+	Idtasks    uint
+	Text       string
 }

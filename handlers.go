@@ -1,21 +1,49 @@
 package main
 
 import (
+	//"context"
 	"encoding/json"
-	"fmt"
 	"log"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	"gorm.io/driver/mysql"
+	"gorm.io/gorm"
 )
 
+type Task struct {
+	Idtasks     uint
+	Description string
+}
+
+type Comment struct {
+	Idcomments uint
+	Idtasks    uint
+	Text       string
+}
+
+/*var db *gorm.DB
+
+func SetDBMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		timeoutContext, _ := context.WithTimeout(context.Background(), time.Second)
+		ctx := context.WithValue(r.Context(), "DB", db.WithContext(timeoutContext))
+		next.ServeHTTP(w, r.WithContext(ctx))
+	})
+}*/
+
 func service() http.Handler {
+	dsn, _ := os.LookupEnv("DSN")
+	db, _ := gorm.Open(mysql.Open(dsn), &gorm.Config{})
+	db.AutoMigrate(&Task{}, &Comment{})
 	r := chi.NewRouter()
 
 	r.Use(middleware.RequestID)
 	r.Use(middleware.Logger)
+	//r.Use(SetDBMiddleware)
 
 	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
@@ -39,7 +67,26 @@ func service() http.Handler {
 		// up to the developer, as some code blocks are preemptable, and others are not.
 		time.Sleep(5 * time.Second)
 
-		w.Write([]byte(fmt.Sprintf("all done.\n")))
+		w.Write([]byte("all done.\n"))
+	})
+
+	r.Get("/tasks", func(w http.ResponseWriter, r *http.Request) {
+		res := db.Take(&Task{})
+		jsonResp, err := json.Marshal(res)
+		if err != nil {
+			log.Fatalf("Error happened in JSON marshal. Err: %s", err)
+		}
+		w.Write(jsonResp)
+	})
+
+	r.Put("/tasks", func(w http.ResponseWriter, r *http.Request) {
+		task := Task{Description: "bla bla"}
+		db.Create(&task)
+		/*jsonResp, err := json.Marshal(res)
+		if err != nil {
+			log.Fatalf("Error happened in JSON marshal. Err: %s", err)
+		}
+		w.Write(jsonResp)*/
 	})
 
 	return r
