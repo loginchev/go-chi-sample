@@ -57,6 +57,17 @@ func service() http.Handler {
 		w.Write(jsonResp)
 	})
 
+	r.Get("/tasks", func(w http.ResponseWriter, r *http.Request) {
+
+		tasks := []Task{}
+		db.Find(&tasks)
+		jsonResp, err := json.Marshal(tasks)
+		if err != nil {
+			log.Fatalf("Error happened in JSON marshal. Err: %s", err)
+		}
+		w.Write(jsonResp)
+	})
+
 	r.Post("/tasks", func(w http.ResponseWriter, r *http.Request) {
 		task := Task{}
 		json.NewDecoder(r.Body).Decode(&task)
