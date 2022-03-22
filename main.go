@@ -1,15 +1,15 @@
 package main
 
 import (
-	//"context"
+	"context"
 	"fmt"
 	"log"
 	"net/http"
 	"os"
 
-	/*"os/signal"
+	"os/signal"
 	"syscall"
-	"time"*/
+	"time"
 
 	"github.com/joho/godotenv"
 )
@@ -27,41 +27,41 @@ func main() {
 	port, _ := os.LookupEnv("PORT")
 	fmt.Printf("%v:%v", host, port)
 	server := &http.Server{Addr: fmt.Sprintf("%v:%v", host, port), Handler: service()}
-	server.ListenAndServe()
+
 	// Server run context
-	/*	serverCtx, serverStopCtx := context.WithCancel(context.Background())
+	serverCtx, serverStopCtx := context.WithCancel(context.Background())
 
-		// Listen for syscall signals for process to interrupt/quit
-		sig := make(chan os.Signal, 1)
-		signal.Notify(sig, syscall.SIGHUP, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)
+	// Listen for syscall signals for process to interrupt/quit
+	sig := make(chan os.Signal, 1)
+	signal.Notify(sig, syscall.SIGHUP, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)
+	go func() {
+		<-sig
+
+		// Shutdown signal with grace period of 30 seconds
+		shutdownCtx, _ := context.WithTimeout(serverCtx, 30*time.Second)
+
 		go func() {
-			<-sig
-
-			// Shutdown signal with grace period of 30 seconds
-			shutdownCtx, _ := context.WithTimeout(serverCtx, 30*time.Second)
-
-			go func() {
-				<-shutdownCtx.Done()
-				if shutdownCtx.Err() == context.DeadlineExceeded {
-					log.Fatal("graceful shutdown timed out.. forcing exit.")
-				}
-			}()
-
-			// Trigger graceful shutdown
-			err := server.Shutdown(shutdownCtx)
-			if err != nil {
-				log.Fatal(err)
+			<-shutdownCtx.Done()
+			if shutdownCtx.Err() == context.DeadlineExceeded {
+				log.Fatal("graceful shutdown timed out.. forcing exit.")
 			}
-			serverStopCtx()
 		}()
 
-		// Run the server
-		err := server.ListenAndServe()
-		if err != nil && err != http.ErrServerClosed {
+		// Trigger graceful shutdown
+		err := server.Shutdown(shutdownCtx)
+		if err != nil {
 			log.Fatal(err)
 		}
+		serverStopCtx()
+	}()
 
-		// Wait for server context to be stopped
-		<-serverCtx.Done()*/
+	// Run the server
+	err := server.ListenAndServe()
+	if err != nil && err != http.ErrServerClosed {
+		log.Fatal(err)
+	}
+
+	// Wait for server context to be stopped
+	<-serverCtx.Done()
 
 }

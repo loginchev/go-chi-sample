@@ -6,7 +6,8 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"time"
+
+	//"time"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
@@ -25,16 +26,6 @@ type Comment struct {
 	Text       string
 }
 
-/*var db *gorm.DB
-
-func SetDBMiddleware(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		timeoutContext, _ := context.WithTimeout(context.Background(), time.Second)
-		ctx := context.WithValue(r.Context(), "DB", db.WithContext(timeoutContext))
-		next.ServeHTTP(w, r.WithContext(ctx))
-	})
-}*/
-
 func service() http.Handler {
 	dsn, _ := os.LookupEnv("DSN")
 	db, _ := gorm.Open(mysql.Open(dsn), &gorm.Config{})
@@ -43,7 +34,6 @@ func service() http.Handler {
 
 	r.Use(middleware.RequestID)
 	r.Use(middleware.Logger)
-	//r.Use(SetDBMiddleware)
 
 	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
@@ -56,37 +46,21 @@ func service() http.Handler {
 		}
 		w.Write(jsonResp)
 	})
-
-	r.Get("/slow", func(w http.ResponseWriter, r *http.Request) {
-		// Simulates some hard work.
-		//
-		// We want this handler to complete successfully during a shutdown signal,
-		// so consider the work here as some background routine to fetch a long running
-		// search query to find as many results as possible, but, instead we cut it short
-		// and respond with what we have so far. How a shutdown is handled is entirely
-		// up to the developer, as some code blocks are preemptable, and others are not.
-		time.Sleep(5 * time.Second)
-
-		w.Write([]byte("all done.\n"))
-	})
-
-	r.Get("/tasks", func(w http.ResponseWriter, r *http.Request) {
-		res := db.Take(&Task{})
-		jsonResp, err := json.Marshal(res)
+	r.Get("/tasks/{taskid}", func(w http.ResponseWriter, r *http.Request) {
+		taskid := chi.URLParam(r, "taskid")
+		task := Task{}
+		db.First(&task, taskid)
+		jsonResp, err := json.Marshal(task)
 		if err != nil {
 			log.Fatalf("Error happened in JSON marshal. Err: %s", err)
 		}
 		w.Write(jsonResp)
 	})
 
-	r.Put("/tasks", func(w http.ResponseWriter, r *http.Request) {
-		task := Task{Description: "bla bla"}
+	r.Post("/tasks", func(w http.ResponseWriter, r *http.Request) {
+		task := Task{}
+		json.NewDecoder(r.Body).Decode(&task)
 		db.Create(&task)
-		/*jsonResp, err := json.Marshal(res)
-		if err != nil {
-			log.Fatalf("Error happened in JSON marshal. Err: %s", err)
-		}
-		w.Write(jsonResp)*/
 	})
 
 	return r
