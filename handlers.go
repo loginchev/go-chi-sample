@@ -6,7 +6,8 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"time"
+
+	//"time"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
@@ -25,16 +26,6 @@ type Comment struct {
 	Text       string
 }
 
-/*var db *gorm.DB
-
-func SetDBMiddleware(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		timeoutContext, _ := context.WithTimeout(context.Background(), time.Second)
-		ctx := context.WithValue(r.Context(), "DB", db.WithContext(timeoutContext))
-		next.ServeHTTP(w, r.WithContext(ctx))
-	})
-}*/
-
 func service() http.Handler {
 	dsn, _ := os.LookupEnv("DSN")
 	db, _ := gorm.Open(mysql.Open(dsn), &gorm.Config{})
@@ -43,7 +34,6 @@ func service() http.Handler {
 
 	r.Use(middleware.RequestID)
 	r.Use(middleware.Logger)
-	//r.Use(SetDBMiddleware)
 
 	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
@@ -56,6 +46,7 @@ func service() http.Handler {
 		}
 		w.Write(jsonResp)
 	})
+<<<<<<< HEAD
 
 	r.Get("/slow", func(w http.ResponseWriter, r *http.Request) {
 		// Simulates some hard work.
@@ -73,20 +64,41 @@ func service() http.Handler {
 	r.Get("/tasks", func(w http.ResponseWriter, r *http.Request) {
 		res := db.Take(&TestTask{})
 		jsonResp, err := json.Marshal(res)
+=======
+	r.Get("/tasks/{taskid}", func(w http.ResponseWriter, r *http.Request) {
+		taskid := chi.URLParam(r, "taskid")
+		task := Task{}
+		db.First(&task, taskid)
+		jsonResp, err := json.Marshal(task)
+>>>>>>> 04dda545ae0f1b1c2534b765aadd66fc2f05f7e6
 		if err != nil {
 			log.Fatalf("Error happened in JSON marshal. Err: %s", err)
 		}
 		w.Write(jsonResp)
 	})
 
+<<<<<<< HEAD
 	r.Put("/tasks", func(w http.ResponseWriter, r *http.Request) {
 		task := TestTask{Description: "bla bla"}
 		db.Create(&task)
 		/*jsonResp, err := json.Marshal(res)
+=======
+	r.Get("/tasks", func(w http.ResponseWriter, r *http.Request) {
+
+		tasks := []Task{}
+		db.Find(&tasks)
+		jsonResp, err := json.Marshal(tasks)
+>>>>>>> 04dda545ae0f1b1c2534b765aadd66fc2f05f7e6
 		if err != nil {
 			log.Fatalf("Error happened in JSON marshal. Err: %s", err)
 		}
-		w.Write(jsonResp)*/
+		w.Write(jsonResp)
+	})
+
+	r.Post("/tasks", func(w http.ResponseWriter, r *http.Request) {
+		task := Task{}
+		json.NewDecoder(r.Body).Decode(&task)
+		db.Create(&task)
 	})
 
 	return r
