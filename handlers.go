@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"time"
 
 	//"time"
 
@@ -46,7 +47,6 @@ func service() http.Handler {
 		}
 		w.Write(jsonResp)
 	})
-<<<<<<< HEAD
 
 	r.Get("/slow", func(w http.ResponseWriter, r *http.Request) {
 		// Simulates some hard work.
@@ -64,31 +64,16 @@ func service() http.Handler {
 	r.Get("/tasks", func(w http.ResponseWriter, r *http.Request) {
 		res := db.Take(&TestTask{})
 		jsonResp, err := json.Marshal(res)
-=======
-	r.Get("/tasks/{taskid}", func(w http.ResponseWriter, r *http.Request) {
-		taskid := chi.URLParam(r, "taskid")
-		task := Task{}
-		db.First(&task, taskid)
-		jsonResp, err := json.Marshal(task)
->>>>>>> 04dda545ae0f1b1c2534b765aadd66fc2f05f7e6
 		if err != nil {
 			log.Fatalf("Error happened in JSON marshal. Err: %s", err)
 		}
 		w.Write(jsonResp)
 	})
 
-<<<<<<< HEAD
 	r.Put("/tasks", func(w http.ResponseWriter, r *http.Request) {
 		task := TestTask{Description: "bla bla"}
 		db.Create(&task)
-		/*jsonResp, err := json.Marshal(res)
-=======
-	r.Get("/tasks", func(w http.ResponseWriter, r *http.Request) {
-
-		tasks := []Task{}
-		db.Find(&tasks)
-		jsonResp, err := json.Marshal(tasks)
->>>>>>> 04dda545ae0f1b1c2534b765aadd66fc2f05f7e6
+		jsonResp, err := json.Marshal(res)
 		if err != nil {
 			log.Fatalf("Error happened in JSON marshal. Err: %s", err)
 		}
